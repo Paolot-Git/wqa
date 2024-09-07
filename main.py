@@ -1,6 +1,5 @@
-import sys
 import pygame
-from constants import *
+from constants import SCREEN_HEIGHT, SCREEN_WIDTH
 from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
@@ -9,7 +8,7 @@ from shot import Shot
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    dt = 0
     clock = pygame.time.Clock()
 
     updatable = pygame.sprite.Group()
@@ -17,43 +16,39 @@ def main():
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
 
-    Asteroid.containers = (asteroids, updatable, drawable)
-    Shot.containers = (shots, updatable, drawable)
-    AsteroidField.containers = updatable
-    asteroid_field = AsteroidField()
-
     Player.containers = (updatable, drawable)
+    Asteroid.containers = (asteroids, updatable, drawable)
+    AsteroidField.containers = (updatable,)
+    Shot.containers = (shots, updatable, drawable)
 
-    player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
-
-    dt = 0
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    player = Player(x=SCREEN_WIDTH / 2, y=SCREEN_HEIGHT / 2)
+    asteroidField = AsteroidField()
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 return
 
-        for obj in updatable:
-            obj.update(dt)
-
-        for asteroid in asteroids:
-            if asteroid.collides_with(player):
-                print("Game over!")
-                sys.exit()
-
-            for shot in shots:
-                if asteroid.collides_with(shot):
-                    shot.kill()
-                    asteroid.split()
-
         screen.fill("black")
 
-        for obj in drawable:
-            obj.draw(screen)
+        for _object in updatable:
+            _object.update(dt)
+
+        for _object in asteroids:
+            if _object.collision(player):
+                return
+            for bullet in shots:
+                if _object.collision(bullet):
+                    _object.split()
+                    bullet.kill()
+                    break
+
+        for _object in drawable:
+            _object.draw(screen)
 
         pygame.display.flip()
 
-        # limit the framerate to 60 FPS
         dt = clock.tick(60) / 1000
 
 
